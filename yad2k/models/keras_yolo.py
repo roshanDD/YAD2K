@@ -60,6 +60,9 @@ def yolo_body(inputs, num_anchors, num_classes):
     x = concatenate([conv21_reshaped, conv20])
     x = DarknetConv2D_BN_Leaky(1024, (3, 3))(x)
     x = DarknetConv2D(num_anchors * (num_classes + 5), (1, 1))(x)
+    print ("inside yolo body\n\n")
+    print (num_anchors * (num_classes + 5))
+    print (x)
     return Model(inputs, x)
 
 
@@ -161,7 +164,8 @@ def yolo_loss(args,
     yolo_output : tensor
         Final convolutional layer features.
 
-    true_boxes : tensor
+    
+    _boxes : tensor
         Ground truth boxes tensor with shape [batch, num_true_boxes, 5]
         containing box x_center, y_center, width, height, and class.
 
@@ -242,6 +246,13 @@ def yolo_loss(args,
 
     pred_areas = pred_wh[..., 0] * pred_wh[..., 1]
     true_areas = true_wh[..., 0] * true_wh[..., 1]
+    #sess = tf.Session()
+    print ("*********************")
+    print ("True Area")
+    #print (sess.run(true_areas))
+    tf.Print(true_areas, [true_areas], message = "This is True Areas: ")
+    b = tf.add(true_areas, true_areas).eval()
+    print ("********************")
 
     union_areas = pred_areas + true_areas - intersect_areas
     iou_scores = intersect_areas / union_areas
@@ -281,7 +292,8 @@ def yolo_loss(args,
     matching_boxes = matching_true_boxes[..., 0:4]
     coordinates_loss = (coordinates_scale * detectors_mask *
                         K.square(matching_boxes - pred_boxes))
-
+    print ("coordinate loss\n\n")
+    print (coordinates_loss)
     confidence_loss_sum = K.sum(confidence_loss)
     classification_loss_sum = K.sum(classification_loss)
     coordinates_loss_sum = K.sum(coordinates_loss)
